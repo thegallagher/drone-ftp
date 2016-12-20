@@ -1,7 +1,7 @@
 const Drone = require('drone-node');
 const plugin = new Drone.Plugin();
 
-const PromiseSftp = require('promise-sftp');
+const PromiseSftp = require('promise-ftp');
 
 const path = require('path');
 const shelljs = require('shelljs');
@@ -17,7 +17,7 @@ const do_upload = function (workspace, vargs) {
       port: vargs.port,
       username: vargs.username,
       password: vargs.password,
-      privateKey: workspace.keys && workspace.keys['private']
+      secure: vargs.secure
     }).then(function (greetings) {
       console.log('Connection successful. ' + (greetings || ''));
      
