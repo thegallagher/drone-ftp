@@ -1,7 +1,7 @@
 const Drone = require('drone-node');
 const plugin = new Drone.Plugin();
 
-const PromiseSftp = require('promise-ftp');
+const PromiseFtp = require('promise-ftp');
 
 const path = require('path');
 const shelljs = require('shelljs');
@@ -9,8 +9,10 @@ const shelljs = require('shelljs');
 const do_upload = function (workspace, vargs) {
   if (vargs.host) {
 
-    var sftp = new PromiseSftp();
+    var sftp = new PromiseFtp();
     vargs.destination_path || (vargs.destination_path = '/');
+
+    console.log('connecting to ' . vargs.host);
 
     sftp.connect({
       host: vargs.host,
@@ -39,7 +41,7 @@ const do_upload = function (workspace, vargs) {
       sftp.logout();
     });
   } else {
-    console.log("Parameter missing: SFTP server host");
+    console.log("Parameter missing: FTP server host");
     process.exit(1)
   }
 }
@@ -58,6 +60,7 @@ plugin.parse().then((params) => {
 
   vargs.username      || (vargs.username = '');
   vargs.files         || (vargs.files = []);
+  vargs.secure        || (vargs.secure = true);
 
   do_upload(workspace, vargs);
 });
