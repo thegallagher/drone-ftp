@@ -28,10 +28,10 @@ publish:
       branch: develop
 
 plugin:
-  name: SFTP
-  desc: Publish files and artifacts via SFTP
+  name: FTP
+  desc: Publish files and artifacts via FTP
   type: publish
-  image: plugins/drone-sftp
+  image: thegallagher/drone-ftp
   labels:
     - sftp
     - server
