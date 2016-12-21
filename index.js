@@ -19,7 +19,7 @@ const do_upload = function (workspace, vargs) {
   var uploadFile = function (file) {
     var src = path.join(workspace.path, file);
     var dest = path.join(vargs.destination_path, vargs.flat ? path.basename(file) : file);
-    if (fs.lstatSync(file).isDirectory()) {
+    if (fs.lstatSync(src).isDirectory()) {
       if (vargs.flat) {
         return true;
       }
