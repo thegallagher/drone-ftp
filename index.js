@@ -57,8 +57,6 @@ const do_upload = function (workspace, vargs) {
 
 plugin.parse().then((params) => {
 
-  console.log(params);
-
   // gets build and repository information for
   // the current running build
   const build = params.build;
