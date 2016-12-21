@@ -4,47 +4,58 @@ const plugin = new Drone.Plugin();
 const PromiseFtp = require('promise-ftp');
 
 const path = require('path');
+const fs = require('fs');
 const shelljs = require('shelljs');
 
 const do_upload = function (workspace, vargs) {
-  if (vargs.host) {
 
-    var sftp = new PromiseFtp();
-    vargs.destination_path || (vargs.destination_path = '/');
-
-    console.log('connecting to ' . vargs.host);
-
-    sftp.connect({
-      host: vargs.host,
-      port: vargs.port,
-      username: vargs.username,
-      password: vargs.password,
-      secure: vargs.secure
-    }).then(function (greetings) {
-      console.log('Connection successful. ' + (greetings || ''));
-     
-      return [].concat.apply([], vargs.files.map((f) => { return shelljs.ls(workspace.path + '/' + f); }));
-    }).each(function(file) {
-      var basename = path.basename(file);
-
-      console.log('Uploading ' + file + ' as ' + basename + ' into ' + vargs.destination_path);
-      return sftp.put(file, path.join(vargs.destination_path, basename))
-    }).then(function() {
-
-      console.log('Upload successful');
-    }).catch(function(err) {
-
-      console.log('An error happened: ' + err);
-      process.exit(2)
-    }).then(function() {
-
-      sftp.logout();
-    });
-  } else {
-    console.log("Parameter missing: FTP server host");
-    process.exit(1)
+  if (!vargs.host) {
+    console.log('Parameter missing: FTP server host');
+    process.exit(1);
   }
-}
+
+  var ftp = new PromiseFtp();
+
+  console.log(vargs);
+
+  var uploadFile = function (file) {
+    var src = path.join(workspace.path, file);
+    var dest = path.join(vargs.destination_path, vargs.flat ? path.basename(file) : file);
+    if (fs.lstatSync(file).isDirectory()) {
+      if (vargs.flat) {
+        return true;
+      }
+      return ftp.mkdir(dest, true);
+    }
+    return ftp.put(src, dest);
+  };
+
+  console.log('Connecting to ' + vargs.host);
+
+  ftp.connect({
+    host: vargs.host,
+    port: vargs.port,
+    user: vargs.username,
+    password: vargs.password,
+    secure: vargs.secure
+  }).then(function () {
+    console.log('Connection successful.');
+
+    shelljs.config.silent = true;
+    shelljs.pushd(workspace.path);
+    var files = shelljs.find(vargs.files);
+    shelljs.popd();
+
+    return Promise.all(files.map(uploadFile));
+  }).then(function() {
+    console.log('Upload successful');
+    ftp.logout();
+    process.exit(0)
+  }).catch(function(err) {
+    console.log('An error happened: ' + err);
+    process.exit(2)
+  });
+};
 
 plugin.parse().then((params) => {
 
@@ -58,9 +69,12 @@ plugin.parse().then((params) => {
   // the .drone.yml file
   const vargs = params.vargs;
 
-  vargs.username      || (vargs.username = '');
-  vargs.files         || (vargs.files = []);
-  vargs.secure        || (vargs.secure = true);
+  console.log(vargs);
+
+  vargs.files                || (vargs.files = []);
+  vargs.secure !== undefined || (vargs.secure = true);
+  vargs.destination_path     || (vargs.destination_path = '/');
+  vargs.flat !== undefined   || (vargs.flat = true);
 
   do_upload(workspace, vargs);
 });
