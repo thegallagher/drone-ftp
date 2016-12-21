@@ -16,8 +16,6 @@ const do_upload = function (workspace, vargs) {
 
   var ftp = new PromiseFtp();
 
-  console.log(vargs);
-
   var uploadFile = function (file) {
     var src = path.join(workspace.path, file);
     var dest = path.join(vargs.destination_path, vargs.flat ? path.basename(file) : file);
@@ -68,8 +66,6 @@ plugin.parse().then((params) => {
   // gets plugin-specific parameters defined in
   // the .drone.yml file
   const vargs = params.vargs;
-
-  console.log(vargs);
 
   vargs.files                || (vargs.files = []);
   vargs.secure !== undefined || (vargs.secure = true);
